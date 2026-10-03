@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="light dark" />
+  <link rel="icon" href="data:," />
+  <title>US to Grams Converter</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light dark;
+      --paper:#f4f6f3; --surface:#ffffff; --surface-2:#e9eee9; --ink:#17201c; --muted:#5a665f;
+      --line:#d6ddd8; --accent:#dd5b3f; --accent-soft:#ffe3da; --accent-ink:#8e2b1b;
+      --green:#1f7054; --green-soft:#dff1e8; --shadow:0 22px 60px rgba(19,35,27,.10);
+    }
+    @media (prefers-color-scheme:dark){
+      :root{--paper:#111613;--surface:#18201c;--surface-2:#222c27;--ink:#f4f7f4;--muted:#aeb9b2;--line:#34423a;--accent:#ff795b;--accent-soft:#47271f;--accent-ink:#ffc4b5;--green:#6cc6a2;--green-soft:#1b382c;--shadow:0 22px 70px rgba(0,0,0,.28)}
+    }
+    *{box-sizing:border-box}
+    html{background:var(--paper)}
+    body{margin:0;background:var(--paper);color:var(--ink);font-family:Manrope,system-ui,sans-serif;min-height:100vh}
+    button,input,select{font:inherit;color:inherit}
+    button,a{touch-action:manipulation}
+    .page{max-width:1120px;margin:0 auto;padding:clamp(24px,5vw,64px) clamp(16px,4vw,44px) 52px}
+    .intro{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:28px}
+    .intro h1{font-size:clamp(34px,5.5vw,68px);line-height:.98;letter-spacing:-.055em;margin:0;max-width:720px;font-weight:800}
+    .intro h1 em{font-style:normal;color:var(--accent)}
+    .intro p{max-width:310px;margin:0 0 5px;color:var(--muted);line-height:1.55;font-size:14px}
+    .workspace{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(330px,.95fr);background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);min-height:510px}
+    .controls{padding:clamp(22px,4vw,46px);border-right:1px solid var(--line)}
+    .result{padding:clamp(22px,4vw,46px);display:flex;flex-direction:column;background:linear-gradient(155deg,var(--surface) 0%,var(--surface-2) 100%);position:relative;overflow:hidden}
+    .step{display:flex;align-items:center;gap:10px;margin:0 0 10px;font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--green)}
+    .step span{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--green-soft);font:500 12px/1 DM Mono,monospace}
+    .amount-row{display:grid;grid-template-columns:minmax(0,1fr) 190px;gap:12px;margin-bottom:12px}
+    .field{position:relative}
+    .field input,.field select{width:100%;height:62px;border:1px solid var(--line);background:var(--paper);border-radius:12px;padding:0 16px;outline:none;font-weight:700;font-size:18px;transition:border-color .15s,box-shadow .15s}
+    .field input:focus,.field select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+    .field select{appearance:none;padding-right:42px;cursor:pointer}
+    .select-wrap:after{content:"";position:absolute;right:17px;top:25px;width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);pointer-events:none}
+    .fractions{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 30px}
+    .fraction{border:1px solid var(--line);background:transparent;border-radius:999px;padding:7px 12px;font:500 13px DM Mono,monospace;cursor:pointer}
+    .fraction:hover,.fraction:focus-visible{border-color:var(--accent);color:var(--accent);outline:none}
+    .picker{position:relative;margin-top:6px}
+    .search-shell{height:62px;border:1px solid var(--line);background:var(--paper);border-radius:12px;display:flex;align-items:center;gap:12px;padding:0 14px}
+    .search-shell:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+    .search-shell svg{width:21px;flex:0 0 auto;color:var(--muted)}
+    #ingredientSearch{border:0;background:transparent;outline:0;width:100%;height:100%;font-weight:700;font-size:17px;padding:0;min-width:0}
+    .clear{display:none;border:0;background:var(--surface-2);border-radius:50%;width:28px;height:28px;cursor:pointer;color:var(--muted);font-size:18px;line-height:1}
+    .picker.open .clear{display:block}
+    .menu{position:absolute;top:70px;left:0;right:0;z-index:20;background:var(--surface);border:1px solid var(--line);box-shadow:0 18px 48px rgba(17,29,22,.18);border-radius:14px;overflow:hidden;display:none;max-height:340px}
+    .picker.open .menu{display:block}
+    .menu-head{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line);font-size:12px;color:var(--muted)}
+    .options{overflow:auto;max-height:292px;padding:6px}
+    .option{width:100%;border:0;background:transparent;border-radius:9px;padding:10px;display:flex;justify-content:space-between;gap:12px;text-align:left;cursor:pointer;align-items:center}
+    .option:hover,.option[aria-selected="true"]{background:var(--surface-2)}
+    .option-name{font-weight:700;font-size:14px}.option-note{display:block;color:var(--muted);font-size:11px;margin-top:2px}
+    .source-tag{font:500 10px DM Mono,monospace;border:1px solid var(--line);border-radius:999px;padding:4px 7px;color:var(--muted);flex:0 0 auto}
+    .empty{padding:28px;text-align:center;color:var(--muted);font-size:14px}
+    .popular{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .popular button{border:0;background:var(--surface-2);border-radius:8px;padding:8px 10px;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer}
+    .popular button:hover{color:var(--ink)}
+    .answer-label{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+    .answer{display:flex;align-items:flex-end;gap:10px;margin:0 0 8px}
+    #grams{font:500 clamp(64px,9vw,108px)/.88 DM Mono,monospace;letter-spacing:-.075em;color:var(--ink)}
+    .unit-g{font:700 30px/1 Manrope,sans-serif;color:var(--accent);padding-bottom:8px}
+    #equation{font:500 14px/1.5 DM Mono,monospace;color:var(--muted);margin:0 0 28px}
+    .detail{margin-top:auto;border-top:1px solid var(--line);padding-top:20px;position:relative;z-index:2}
+    .ingredient-name{font-weight:800;font-size:18px;margin-bottom:5px}
+    .prep{color:var(--muted);font-size:13px;line-height:1.5;margin-bottom:13px}
+    .meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+    .density{font:500 12px DM Mono,monospace;background:var(--green-soft);color:var(--green);padding:6px 9px;border-radius:7px}
+    .citation{font-size:12px;font-weight:700;color:var(--accent);text-underline-offset:3px}
+    .cup-art{position:absolute;width:210px;height:210px;right:-38px;top:24px;color:var(--line);opacity:.8;pointer-events:none}
+    .notice{margin:18px 2px 0;display:grid;grid-template-columns:1fr auto;gap:16px;align-items:start;color:var(--muted);font-size:12px;line-height:1.55}
+    .notice a{color:inherit;text-underline-offset:3px}
+    .library{margin-top:32px;border-top:1px solid var(--line);padding-top:22px}
+    details summary{cursor:pointer;font-weight:800;font-size:15px;list-style:none;display:flex;justify-content:space-between;align-items:center}
+    details summary::-webkit-details-marker{display:none}
+    details summary:after{content:"+";font:500 22px DM Mono,monospace;color:var(--accent)}
+    details[open] summary:after{content:"−"}
+    .library-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px}
+    .lib-item{padding:13px 0;border-top:1px solid var(--line)}
+    .lib-item b{font-size:13px;display:block}.lib-item span{font:400 11px DM Mono,monospace;color:var(--muted)}
+    @media(max-width:780px){
+      .page{padding-top:28px}.intro{display:block}.intro h1{max-width:600px}.intro p{margin-top:16px;max-width:540px}
+      .workspace{grid-template-columns:1fr}.controls{border-right:0;border-bottom:1px solid var(--line)}.result{min-height:360px}.cup-art{width:160px;height:160px;right:-42px;top:18px}.library-grid{grid-template-columns:repeat(2,1fr)}
+    }
+    @media(max-width:480px){
+      .intro h1{font-size:40px}.workspace{margin:0 -4px}.amount-row{grid-template-columns:1fr 1fr}.field input,.field select,.search-shell{height:56px;font-size:16px}.select-wrap:after{top:22px}.controls,.result{padding:22px 18px}.fractions{margin-bottom:25px}.notice{grid-template-columns:1fr}.library-grid{grid-template-columns:1fr 1fr}#grams{font-size:70px}.cup-art{opacity:.45}
+    }
+    @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="intro">
+      <h1>Turn strange measures into <em>grams.</em></h1>
+      <p>Choose an ingredient, enter a US measure, and get the kitchen-scale answer. Ingredient matters: a cup of flour is not a cup of honey.</p>
+    </header>
+
+    <section class="workspace" aria-label="Ingredient weight converter">
+      <div class="controls">
+        <p class="step"><span>1</span> Amount &amp; measure</p>
+        <div class="amount-row">
+          <div class="field"><input id="amount" value="1" inputmode="decimal" aria-label="Amount" autocomplete="off"></div>
+          <div class="field select-wrap">
+            <select id="measure" aria-label="US measure">
+              <option value="cup">US cup</option>
+              <option value="floz">fl oz</option>
+              <option value="tbsp">tablespoon</option>
+              <option value="tsp">teaspoon</option>
+              <option value="pint">US pint</option>
+              <option value="quart">US quart</option>
+              <option value="gallon">US gallon</option>
+              <option value="gill">US gill</option>
+              <option value="stick">stick / ½ cup</option>
+              <option value="egg">large egg</option>
+            </select>
+          </div>
+        </div>
+        <div class="fractions" aria-label="Quick amounts">
+          <button class="fraction" data-v="0.25">¼</button><button class="fraction" data-v="0.333333">⅓</button><button class="fraction" data-v="0.5">½</button><button class="fraction" data-v="0.666667">⅔</button><button class="fraction" data-v="0.75">¾</button><button class="fraction" data-v="1">1</button>
+        </div>
+
+        <p class="step"><span>2</span> Ingredient</p>
+        <div class="picker" id="picker">
+          <div class="search-shell">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>
+            <input id="ingredientSearch" role="combobox" aria-expanded="false" aria-controls="ingredientOptions" aria-autocomplete="list" value="All-purpose flour" autocomplete="off">
+            <button class="clear" id="clear" type="button" aria-label="Clear ingredient search">×</button>
+          </div>
+          <div class="menu" id="ingredientOptions" role="listbox">
+            <div class="menu-head"><span id="matchCount">Ingredients</span><span>source included</span></div>
+            <div class="options" id="options"></div>
+          </div>
+        </div>
+        <div class="popular" aria-label="Popular ingredients">
+          <button data-id="ap-flour">Flour</button><button data-id="sugar">Sugar</button><button data-id="butter">Butter</button><button data-id="milk">Milk</button><button data-id="olive-oil">Olive oil</button><button data-id="rolled-oats">Oats</button>
+        </div>
+      </div>
+
+      <aside class="result" aria-live="polite">
+        <svg class="cup-art" viewBox="0 0 220 220" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M43 42h103l-9 130a18 18 0 0 1-18 16H70a18 18 0 0 1-18-16L43 42Z"/><path d="M146 68h15c25 0 31 18 28 36-3 20-15 31-45 29M58 76h54M61 101h38M63 126h49M65 151h34"/></svg>
+        <div class="answer-label">On your scale</div>
+        <div class="answer"><span id="grams">120</span><span class="unit-g">g</span></div>
+        <p id="equation">1 US cup × 120 g per cup</p>
+        <div class="detail">
+          <div class="ingredient-name" id="ingredientName">All-purpose flour</div>
+          <div class="prep" id="prep">Spooned lightly into the cup, then levelled.</div>
+          <div class="meta"><span class="density" id="density">120 g / US cup</span><a class="citation" id="citation" target="_blank" rel="noopener noreferrer">Source: King Arthur Baking ↗</a></div>
+        </div>
+      </aside>
+    </section>
+
+    <div class="notice">
+      <span>Kitchen conversions are practical averages. Chop size, packing, brand and moisture can change a cup’s weight; for high-stakes baking, use the recipe author’s gram value when one is given.</span>
+      <a href="https://fdc.nal.usda.gov/food-search/?component=1100" target="_blank" rel="noopener noreferrer">US cup = 236.6 mL</a>
+    </div>
+
+    <section class="library">
+      <details>
+        <summary>Browse the built-in ingredient library</summary>
+        <div class="library-grid" id="libraryGrid"></div>
+      </details>
+    </section>
+  </main>
+
+<script>
+(function(){
+  var SOURCES={
+    ka:{label:'King Arthur Baking',short:'KA',url:'https://www.kingarthurbaking.com/learn/ingredient-weight-chart'},
+    usda:{label:'USDA FoodData Central',short:'USDA',url:'https://fdc.nal.usda.gov/food-search/?component=1100'},
+    az:{label:'USDA / AZ Health Zone',short:'USDA',url:'https://staging.azhealthzone.org/wp-content/uploads/2021/10/tomato_as.pdf'},
+    calc:{label:'The Calculator Site',short:'TCS',url:'https://www.thecalculatorsite.com/cooking/cups-grams.php'},
+    goodto:{label:'GoodTo UK conversions',short:'GT',url:'https://www.goodto.com/food/cups-to-grams-converter-87833'}
+  };
+  var D=[];
+  function add(id,name,cat,g,note,src,aliases,each,tbsp,tsp){D.push({id:id,name:name,cat:cat,g:g,note:note,src:src||'ka',aliases:aliases||'',each:each,tbsp:tbsp,tsp:tsp});}
+
+  add('water','Water','Liquids',227,'Still water; room-temperature kitchen measure.','ka','');
+  add('stock','Vegetable stock','Liquids',227,'Prepared stock; treated as water-density.','ka','broth bouillon');
+  add('milk','Whole milk','Dairy',227,'Fresh dairy milk.','ka','dairy milk');
+  add('buttermilk','Buttermilk','Dairy',227,'Cultured buttermilk.','ka');
+  add('heavy-cream','Heavy / double cream','Dairy',227,'Heavy cream; practical proxy for UK double cream.','ka','whipping cream double');
+  add('yogurt','Plain yoghurt','Dairy',227,'Unstrained plain yoghurt.','ka','yogurt natural');
+  add('sour-cream','Sour cream','Dairy',227,'Level cup.','ka');
+  add('creme-fraiche','Crème fraîche','Dairy',226,'1/2 cup = 113 g.','ka');
+  add('cream-cheese','Cream cheese','Dairy',227,'Softened and levelled.','ka');
+  add('mascarpone','Mascarpone','Dairy',227,'Level cup.','ka');
+  add('ricotta','Ricotta','Dairy',227,'Not heavily drained.','ka');
+  add('cottage-cheese','Cottage cheese','Dairy',226,'1/2 cup = 113 g.','ka');
+  add('feta','Feta, crumbled','Dairy',114,'Loosely crumbled.','ka');
+  add('cheddar','Cheddar, grated','Dairy',113,'Loosely grated; also suitable for mozzarella.','ka','grated cheese mozzarella');
+  add('parmesan','Parmesan, grated','Dairy',100,'Finely grated.','ka');
+  add('halloumi','Halloumi, grated','Dairy',125,'Loosely grated; USDA household-weight estimate.','usda');
+  add('goat-cheese','Goat cheese, crumbled','Dairy',112,'Loosely crumbled.','usda');
+  add('blue-cheese','Blue cheese, crumbled','Dairy',135,'Loosely crumbled.','usda');
+  add('labneh','Labneh','Dairy',240,'Strained yoghurt; thickness varies.','usda');
+  add('clotted-cream','Clotted cream','Dairy',240,'Level cup; brand varies.','goodto');
+  add('almond-milk','Almond milk','Dairy-free',240,'Unsweetened; shake before measuring.','calc','plant milk');
+  add('oat-milk','Oat milk','Dairy-free',240,'Unsweetened; shake before measuring.','calc','plant milk');
+  add('soy-milk','Soy milk','Dairy-free',243,'Unsweetened; shake before measuring.','usda','plant milk');
+  add('coconut-milk','Coconut milk, canned','Dairy-free',241,'Well shaken before measuring.','ka');
+  add('coconut-cream','Coconut cream','Dairy-free',284,'Unsweetened, canned.','ka');
+  add('egg','Egg, large','Dairy',243,'Beaten egg by volume; 50 g per large egg without shell.','usda','eggs',50);
+
+  add('butter','Butter','Oils & fats',226,'1 US stick / 1/2 cup = 113 g.','ka','salted unsalted');
+  add('olive-oil','Olive oil','Oils & fats',200,'Includes extra-virgin olive oil.','ka','evoo extra virgin');
+  add('vegetable-oil','Vegetable / grapeseed oil','Oils & fats',198,'Neutral cooking oil.','ka','canola rapeseed sunflower grapeseed');
+  add('coconut-oil','Coconut oil','Oils & fats',226,'Solid or liquid measure.','ka');
+  add('ghee','Ghee','Oils & fats',176,'1/4 cup = 44 g.','ka');
+  add('lard','Lard','Oils & fats',226,'1/2 cup = 113 g.','ka');
+  add('margarine','Dairy-free spread','Oils & fats',230,'Soft baking spread; product varies.','calc','margarine vegan butter');
+  add('sesame-oil','Sesame oil','Oils & fats',218,'Toasted or plain.','usda');
+
+  add('ap-flour','All-purpose flour','Flours',120,'Spooned lightly into the cup, then levelled.','ka','plain flour white flour');
+  add('bread-flour','Bread flour','Flours',120,'Also called strong white bread flour in the UK.','ka','strong white');
+  add('whole-wheat','Whole wheat flour','Flours',113,'Also called wholemeal flour in the UK.','ka','wholemeal');
+  add('self-rising','Self-raising flour','Flours',113,'UK self-raising / US self-rising flour.','ka');
+  add('spelt-flour','Spelt flour','Flours',99,'Light spelt flour.','ka');
+  add('rye-flour','Rye flour','Flours',106,'Medium rye flour.','ka');
+  add('buckwheat-flour','Buckwheat flour','Flours',120,'Level cup.','ka');
+  add('oat-flour','Oat flour','Flours',92,'Finely milled oats.','ka');
+  add('chickpea-flour','Chickpea / gram flour','Flours',85,'Also called besan.','ka','garbanzo besan');
+  add('coconut-flour','Coconut flour','Flours',128,'Level cup; very absorbent.','ka');
+  add('almond-flour','Ground almonds / almond flour','Flours',96,'Finely ground; almond meal may be lighter.','ka','almond meal');
+  add('rice-flour','White rice flour','Flours',142,'Finely milled.','ka');
+  add('cornmeal','Cornmeal','Flours',138,'Whole cornmeal; coarse polenta is listed separately.','ka');
+  add('polenta','Polenta, coarse','Flours',163,'Dry, coarse-ground cornmeal.','ka');
+  add('semolina','Semolina','Flours',163,'Dry semolina flour.','ka');
+  add('cornstarch','Cornflour / cornstarch','Flours',112,'1/4 cup = 28 g.','ka','corn flour',null,null,3.5);
+  add('potato-starch','Potato starch','Flours',152,'Level cup.','ka');
+  add('tapioca','Tapioca starch','Flours',113,'Also called tapioca flour.','ka');
+
+  add('rice','Long-grain rice, dry','Grains',198,'Uncooked long-grain rice.','ka','white rice basmati');
+  add('brown-rice','Brown rice, cooked','Grains',170,'Cooked and cooled enough to measure.','ka');
+  add('rolled-oats','Rolled / porridge oats','Grains',100,'Practical midpoint; brands and cut range about 89–113 g/cup.','ka','old fashioned quick oats oatmeal');
+  add('quinoa','Quinoa, dry','Grains',177,'Uncooked whole quinoa.','ka');
+  add('barley','Pearl barley, dry','Grains',213,'Uncooked pearled barley.','ka');
+  add('bulgur','Bulgur wheat, dry','Grains',152,'Uncooked.','ka');
+  add('buckwheat','Buckwheat groats','Grains',170,'Whole, uncooked groats.','ka');
+  add('millet','Millet, dry','Grains',206,'Whole, uncooked millet.','ka');
+  add('couscous','Couscous, dry','Grains',173,'Uncooked standard couscous.','usda');
+  add('farro','Farro, dry','Grains',190,'Uncooked whole grain; variety varies.','usda','spelt grain emmer');
+  add('breadcrumbs','Breadcrumbs, dry','Grains',112,'Fine dry crumbs; fresh crumbs are about 84 g/cup.','ka','panko');
+  add('pasta','Pasta, dry','Grains',100,'Small dry shapes; long pasta is better weighed directly.','usda','orzo spaghetti linguine noodles soba');
+
+  add('sugar','Granulated sugar','Sugars',198,'White granulated sugar.','ka','white sugar');
+  add('caster-sugar','Caster sugar','Sugars',190,'US superfine/castor sugar measure.','ka','superfine');
+  add('brown-sugar','Brown / muscovado sugar','Sugars',213,'Packed into the cup.','ka','light dark muscovado');
+  add('powdered-sugar','Icing / confectioners’ sugar','Sugars',113,'Unsifted.','ka','powdered');
+  add('demerara','Demerara sugar','Sugars',220,'Level cup.','ka','raw');
+  add('coconut-sugar','Coconut sugar','Sugars',154,'1/2 cup = 77 g.','ka');
+  add('honey','Honey','Sugars',336,'1 tablespoon = 21 g.','ka','set honey',null,21,7);
+  add('maple-syrup','Maple syrup','Sugars',312,'1/2 cup = 156 g.','ka');
+  add('agave','Agave syrup','Sugars',336,'1/4 cup = 84 g.','ka');
+  add('molasses','Molasses / black treacle','Sugars',340,'1/4 cup = 85 g; black treacle is a practical equivalent.','ka','treacle');
+  add('golden-syrup','Golden syrup','Sugars',340,'Dense invert syrup; practical kitchen average.','goodto');
+  add('date-syrup','Date syrup','Sugars',336,'Pourable date syrup; brand varies.','usda');
+
+  add('almonds','Almonds, whole','Nuts & seeds',142,'Whole shelled almonds.','ka');
+  add('walnuts','Walnuts, chopped','Nuts & seeds',113,'Chopped; whole walnuts are about 128 g/cup.','ka');
+  add('pecans','Pecans, whole','Nuts & seeds',105,'Whole; diced pecans are about 114 g/cup.','ka');
+  add('cashews','Cashews','Nuts & seeds',113,'Whole or chopped.','ka');
+  add('hazelnuts','Hazelnuts','Nuts & seeds',142,'Whole, shelled.','ka');
+  add('peanuts','Peanuts','Nuts & seeds',142,'Whole, shelled.','ka');
+  add('pistachios','Pistachios','Nuts & seeds',120,'Shelled.','ka');
+  add('pine-nuts','Pine nuts','Nuts & seeds',142,'Level cup.','ka');
+  add('macadamia','Macadamia nuts','Nuts & seeds',149,'Whole.','ka');
+  add('peanut-butter','Peanut butter','Nuts & seeds',270,'Smooth, stirred.','ka');
+  add('almond-butter','Almond butter','Nuts & seeds',272,'Smooth, stirred.','ka');
+  add('tahini','Tahini','Nuts & seeds',256,'Stirred before measuring.','ka','sesame paste');
+  add('sesame','Sesame seeds','Nuts & seeds',142,'Level cup.','ka');
+  add('pumpkin-seeds','Pumpkin seeds','Nuts & seeds',160,'Shelled pepitas.','ka','pepitas');
+  add('sunflower-seeds','Sunflower seeds','Nuts & seeds',140,'Shelled.','ka');
+  add('chia','Chia seeds','Nuts & seeds',148,'Level cup.','ka');
+  add('flax','Flax / linseeds','Nuts & seeds',140,'Whole seeds; meal is about 100 g/cup.','ka','linseed');
+  add('poppy','Poppy seeds','Nuts & seeds',144,'2 tablespoons = 18 g.','ka');
+  add('hemp','Hemp seeds','Nuts & seeds',160,'Shelled hemp hearts.','usda');
+
+  add('onion','Onion, diced','Vegetables',142,'Fresh, diced.','ka','red onion brown onion');
+  add('tomato','Tomato, chopped','Vegetables',180,'Red, ripe, raw and chopped.','az','diced cherry datterini');
+  add('carrot','Carrots, diced','Vegetables',142,'Diced; grated carrots are about 99 g/cup.','ka');
+  add('celery','Celery, diced','Vegetables',142,'Fresh, diced.','ka');
+  add('mushroom','Mushrooms, sliced','Vegetables',78,'Fresh sliced; includes chestnut mushrooms.','ka','portobello');
+  add('leek','Leeks, diced','Vegetables',92,'White and light-green parts.','ka');
+  add('spring-onion','Spring onions, sliced','Vegetables',64,'Also called scallions.','ka','scallion green onion');
+  add('shallot','Shallots, sliced','Vegetables',156,'Peeled and sliced.','ka');
+  add('pepper','Bell pepper, chopped','Vegetables',142,'Fresh sweet pepper.','ka','capsicum red pepper');
+  add('corn','Sweetcorn kernels','Vegetables',152,'Fresh or frozen kernels.','ka','corn');
+  add('courgette','Courgette, shredded','Vegetables',135,'Midpoint of 121–150 g/cup; moisture varies.','ka','zucchini grated');
+  add('garlic','Garlic, minced','Vegetables',224,'2 tablespoons = 28 g.','ka',null,null,14,4.7);
+  add('ginger','Fresh ginger, sliced','Vegetables',228,'Peeled and sliced.','ka');
+  add('spinach','Spinach, raw','Vegetables',30,'Loosely filled cup of raw leaves.','usda','greens');
+  add('kale','Kale / cavolo nero, chopped','Vegetables',67,'Chopped; loose whole leaves can be about 21 g/cup.','usda','cavolo nero');
+  add('broccoli','Broccoli, chopped','Vegetables',91,'Raw florets and chopped stem.','usda','broccolini');
+  add('cauliflower','Cauliflower, chopped','Vegetables',107,'Raw florets and chopped stem.','usda');
+  add('aubergine','Aubergine, cubed','Vegetables',82,'Raw; also called eggplant.','usda','eggplant');
+  add('butternut','Butternut squash, cubed','Vegetables',140,'Raw, peeled cubes.','usda','squash pumpkin');
+  add('sweet-potato','Sweet potato, cubed','Vegetables',133,'Raw, peeled cubes.','usda');
+  add('potato','Potato, diced','Vegetables',150,'Raw, peeled; applies to Jersey Royals / Maris Piper as an estimate.','usda','jersey royals maris piper');
+  add('asparagus','Asparagus, chopped','Vegetables',134,'Raw, 1-inch pieces.','usda');
+  add('green-beans','Green / runner beans','Vegetables',100,'Raw, chopped.','usda','runner beans');
+  add('peas','Green peas','Vegetables',145,'Fresh or frozen.','usda');
+  add('cucumber','Cucumber, chopped','Vegetables',104,'Raw, with peel.','usda');
+  add('fennel','Fennel, sliced','Vegetables',87,'Raw bulb, sliced.','usda');
+  add('cabbage','Cabbage, shredded','Vegetables',89,'Raw; red or green.','usda');
+  add('beetroot','Beetroot, diced','Vegetables',136,'Raw; also called beets.','usda');
+  add('parsnip','Parsnip, sliced','Vegetables',133,'Raw slices.','usda');
+  add('chard','Chard, chopped','Vegetables',36,'Raw leaves and stems.','usda','swiss rainbow');
+  add('celeriac','Celeriac, cubed','Vegetables',156,'Raw, peeled cubes.','usda','celery root');
+  add('swede','Swede, cubed','Vegetables',170,'Raw; also called rutabaga.','usda','rutabaga');
+  add('samphire','Samphire','Vegetables',120,'Fresh, loosely packed.','usda');
+  add('rhubarb','Rhubarb, sliced','Vegetables',130,'Midpoint of 120–140 g/cup for 1/2-inch slices.','ka');
+  add('olives','Olives, sliced','Vegetables',142,'Drained and sliced.','ka');
+
+  add('apple','Apple, sliced','Fruit',113,'Peeled and sliced.','ka');
+  add('banana','Banana, mashed','Fruit',227,'Mashed ripe banana.','ka');
+  add('blueberries','Blueberries','Fruit',155,'Midpoint of 140–170 g/cup; fresh or frozen.','ka');
+  add('raspberries','Raspberries','Fruit',120,'Fresh, loosely filled.','ka');
+  add('strawberries','Strawberries, sliced','Fruit',167,'Fresh and sliced.','ka');
+  add('blackberries','Blackberries','Fruit',144,'Fresh, loosely filled.','usda');
+  add('gooseberries','Gooseberries','Fruit',150,'Fresh, topped and tailed.','usda');
+  add('cherries','Cherries, chopped','Fruit',160,'Fresh, pitted and chopped.','ka');
+  add('peach','Peach, diced','Fruit',170,'Peeled and diced.','ka');
+  add('pear','Pear, diced','Fruit',163,'Peeled and diced.','ka');
+  add('pineapple','Pineapple, diced','Fruit',170,'Fresh or canned and drained.','ka');
+  add('cranberries','Cranberries','Fruit',99,'Fresh or frozen.','ka');
+  add('mixed-berries','Mixed berries, frozen','Fruit',142,'Frozen mixed berries.','ka');
+  add('avocado','Avocado, cubed','Fruit',150,'Fresh flesh, cubed.','usda');
+  add('dates','Dates, chopped','Fruit',149,'Pitted and chopped.','ka','medjool');
+  add('raisins','Raisins / sultanas','Fruit',149,'Loose raisins; packed raisins are about 170 g/cup.','ka','sultanas');
+  add('dried-apricots','Dried apricots, diced','Fruit',128,'Diced; 1/2 cup = 64 g.','ka');
+  add('dried-figs','Dried figs, chopped','Fruit',149,'Stemmed and chopped.','ka');
+  add('coconut-shredded','Desiccated coconut','Fruit',85,'Unsweetened desiccated or sweetened shredded coconut.','ka','shredded');
+  add('lemon-juice','Lemon / lime juice','Fruit',224,'1 tablespoon = 14 g.','ka','citrus',null,14,4.7);
+
+  add('lentils','Lentils, dry','Legumes',192,'Dry green, brown or Puy lentils.','usda','red lentils puy');
+  add('lentils-cooked','Lentils, cooked','Legumes',198,'Cooked and drained.','usda');
+  add('chickpeas','Chickpeas, cooked','Legumes',164,'Cooked and drained; includes canned.','usda','garbanzo');
+  add('white-beans','White beans, cooked','Legumes',180,'Cooked and drained; cannellini, haricot or butter beans.','usda','cannellini haricot butterbeans lima');
+  add('black-beans','Black beans, cooked','Legumes',172,'Cooked and drained.','usda');
+  add('black-eyed','Black-eyed beans, cooked','Legumes',171,'Cooked and drained.','usda','black eyed peas');
+  add('split-peas','Split peas, dry','Legumes',197,'Dry split peas.','usda');
+
+  add('cocoa','Cocoa powder','Baking',84,'Natural unsweetened; 1/2 cup = 42 g.','ka');
+  add('choc-chips','Chocolate chips','Baking',170,'Standard chips; mini chips may be slightly heavier.','ka','chocolate chopped');
+  add('baking-powder','Baking powder','Baking',192,'1 teaspoon = 4 g.','ka',null,null,12,4);
+  add('baking-soda','Baking soda','Baking',288,'1 teaspoon = 6 g.','ka','bicarbonate soda bicarb',null,18,6);
+  add('salt','Table salt','Baking',288,'1 tablespoon = 18 g; flaky/kosher salts are much lighter.','ka',null,null,18,6);
+  add('kosher-dc','Diamond Crystal kosher salt','Baking',128,'1 tablespoon = 8 g.','ka','flaky salt',null,8,2.7);
+  add('yeast','Instant yeast','Baking',149,'2¼ teaspoons = 7 g.','ka',null,null,9.3,3.1);
+  add('vanilla','Vanilla extract','Baking',224,'1 tablespoon = 14 g.','ka',null,null,14,4.7);
+
+  add('tomato-paste','Tomato paste / purée','Condiments',232,'2 tablespoons = 29 g.','ka',null,null,14.5,4.8);
+  add('passata','Passata','Condiments',244,'Smooth strained tomato.','usda');
+  add('pesto','Pesto','Condiments',224,'2 tablespoons = 28 g.','ka');
+  add('mayonnaise','Mayonnaise','Condiments',226,'1/2 cup = 113 g; vegan versions vary.','ka','vegan mayo');
+  add('jam','Jam / preserves','Condiments',340,'1/4 cup = 85 g.','ka');
+  add('miso','Miso paste','Condiments',272,'1 tablespoon ≈ 17 g.','usda',null,null,17,5.7);
+  add('soy-sauce','Soy sauce / tamari','Condiments',255,'1 tablespoon ≈ 16 g.','usda','tamari',null,16,5.3);
+  add('mustard','Dijon / English mustard','Condiments',240,'1 tablespoon ≈ 15 g.','usda',null,15,5);
+  add('harissa','Harissa paste','Condiments',272,'1 tablespoon ≈ 17 g; brands vary.','usda');
+  add('capers','Capers, drained','Condiments',144,'1 tablespoon ≈ 9 g.','usda',null,9,3);
+  add('nutritional-yeast','Nutritional yeast','Condiments',64,'Flakes; 1 tablespoon ≈ 4 g.','usda',null,4,1.3);
+  add('aquafaba','Aquafaba','Condiments',240,'Drained chickpea liquid; 1 tablespoon ≈ 15 g.','usda',null,15,5);
+  add('worcestershire','Worcestershire sauce','Condiments',272,'1 tablespoon ≈ 17 g.','usda','vegetarian');
+  add('vinegar','Vinegar','Condiments',240,'Apple cider, balsamic, rice, sherry or white wine vinegar.','usda','apple cider balsamic rice sherry white wine');
+  add('rose-water','Rose water','Condiments',237,'Water-like density.','usda');
+
+  add('parsley','Parsley, chopped','Herbs & spices',60,'Fresh, loosely packed and chopped.','usda');
+  add('coriander','Coriander / cilantro','Herbs & spices',16,'Fresh leaves, loosely packed.','usda','cilantro');
+  add('basil','Basil leaves','Herbs & spices',24,'Fresh leaves, loosely packed.','usda');
+  add('mint','Mint leaves','Herbs & spices',25,'Fresh leaves, loosely packed.','usda');
+  add('dill','Dill','Herbs & spices',9,'Fresh sprigs, loosely packed.','usda');
+  add('rosemary','Rosemary','Herbs & spices',27,'Fresh leaves.','usda');
+  add('thyme','Thyme','Herbs & spices',30,'Fresh leaves and tender stems.','usda');
+  add('chives','Chives','Herbs & spices',42,'Fresh, chopped; 1/2 cup = 21 g.','ka');
+  add('ground-cinnamon','Ground cinnamon','Herbs & spices',125,'1 teaspoon ≈ 2.6 g.','usda','spice',null,7.8,2.6);
+  add('ground-cumin','Ground cumin','Herbs & spices',101,'1 teaspoon ≈ 2.1 g.','usda','spice',null,6.3,2.1);
+  add('turmeric','Ground turmeric','Herbs & spices',143,'1 teaspoon ≈ 3 g.','usda','spice',null,9,3);
+  add('paprika','Paprika / pimentón','Herbs & spices',110,'1 teaspoon ≈ 2.3 g.','usda','smoked spice',null,6.9,2.3);
+  add('black-pepper','Black pepper, ground','Herbs & spices',110,'1 teaspoon ≈ 2.3 g.','usda','spice',null,6.9,2.3);
+
+  var factors={cup:1,floz:1/8,tbsp:1/16,tsp:1/48,pint:2,quart:4,gallon:16,gill:.5,stick:.5};
+  var labels={cup:'US cup',floz:'fl oz',tbsp:'tablespoon',tsp:'teaspoon',pint:'US pint',quart:'US quart',gallon:'US gallon',gill:'US gill',stick:'stick / ½ cup',egg:'large egg'};
+  var selected=D[0], active=-1;
+  var amount=document.getElementById('amount'), measure=document.getElementById('measure'), search=document.getElementById('ingredientSearch');
+  var picker=document.getElementById('picker'), options=document.getElementById('options'), count=document.getElementById('matchCount');
+  function parseAmount(v){
+    v=String(v).trim().replace('¼','1/4').replace('⅓','1/3').replace('½','1/2').replace('⅔','2/3').replace('¾','3/4');
+    if(!v)return NaN;
+    var parts=v.split(/\s+/), total=0;
+    for(var i=0;i<parts.length;i++){
+      if(parts[i].indexOf('/')>-1){var p=parts[i].split('/');if(p.length!==2||!+p[1])return NaN;total+=(+p[0])/(+p[1]);}
+      else{if(isNaN(+parts[i]))return NaN;total+=+parts[i];}
+    }
+    return total;
+  }
+  function fmt(n){if(!isFinite(n))return '—';if(n>=10)return String(Math.round(n));if(n>=1)return n.toFixed(1).replace(/\.0$/,'');return n.toFixed(2).replace(/0+$/,'').replace(/\.$/,'');}
+  function unitWeight(item,u){if(u==='egg')return item.each||NaN;if(u==='tbsp'&&item.tbsp)return item.tbsp;if(u==='tsp'&&item.tsp)return item.tsp;return item.g*factors[u];}
+  function update(){
+    var n=parseAmount(amount.value), u=measure.value, w=unitWeight(selected,u), grams=n*w;
+    document.getElementById('grams').textContent=(n>=0&&isFinite(grams))?fmt(grams):'—';
+    var base=u==='egg' ? ((selected.each||'—')+' g each') : (u==='tbsp'&&selected.tbsp ? selected.tbsp+' g per tablespoon' : u==='tsp'&&selected.tsp ? selected.tsp+' g per teaspoon' : selected.g+' g per cup');
+    document.getElementById('equation').textContent=(isFinite(n)?fmt(n):'Enter an amount')+' '+labels[u]+(n===1?'':'s')+' × '+base;
+    document.getElementById('ingredientName').textContent=selected.name;
+    document.getElementById('prep').textContent=selected.note;
+    document.getElementById('density').textContent=u==='egg' ? ((selected.each||'—')+' g / large egg') : selected.g+' g / US cup';
+    var s=SOURCES[selected.src]; var c=document.getElementById('citation'); c.href=s.url;c.textContent='Source: '+s.label+' ↗';
+  }
+  function filtered(){var q=search.value.trim().toLowerCase();return D.filter(function(x){return !q||x.name.toLowerCase().indexOf(q)>-1||x.cat.toLowerCase().indexOf(q)>-1||x.aliases.toLowerCase().indexOf(q)>-1;});}
+  function render(){
+    var list=filtered(), max=list.slice(0,60); active=Math.min(active,max.length-1);count.textContent=list.length+' match'+(list.length===1?'':'es');
+    if(!max.length){options.innerHTML='<div class="empty">No match. Try a broader ingredient name.</div>';return;}
+    options.innerHTML=max.map(function(x,i){return '<button class="option" role="option" aria-selected="'+(i===active)+'" data-id="'+x.id+'"><span><span class="option-name">'+x.name+'</span><span class="option-note">'+x.cat+' · '+x.g+' g/cup</span></span><span class="source-tag">'+SOURCES[x.src].short+'</span></button>';}).join('');
+  }
+  function openPicker(){picker.classList.add('open');search.setAttribute('aria-expanded','true');render();}
+  function closePicker(){picker.classList.remove('open');search.setAttribute('aria-expanded','false');active=-1;}
+  function choose(id){var x=D.find(function(d){return d.id===id;});if(!x)return;selected=x;search.value=x.name;if(measure.value==='egg'&&!x.each)measure.value='cup';closePicker();update();}
+  search.addEventListener('focus',function(){search.select();openPicker();});
+  search.addEventListener('input',function(){active=-1;openPicker();});
+  search.addEventListener('keydown',function(e){var list=filtered().slice(0,60);if(e.key==='ArrowDown'){e.preventDefault();active=Math.min(active+1,list.length-1);render();}else if(e.key==='ArrowUp'){e.preventDefault();active=Math.max(active-1,0);render();}else if(e.key==='Enter'&&list.length){e.preventDefault();choose(list[active>=0?active:0].id);}else if(e.key==='Escape'){closePicker();search.value=selected.name;}});
+  options.addEventListener('click',function(e){var b=e.target.closest('[data-id]');if(b)choose(b.dataset.id);});
+  document.getElementById('clear').addEventListener('click',function(){search.value='';search.focus();render();});
+  document.addEventListener('click',function(e){if(!picker.contains(e.target)){closePicker();search.value=selected.name;}});
+  amount.addEventListener('input',update);measure.addEventListener('change',function(){if(this.value==='egg'&&selected.id!=='egg')choose('egg');update();});
+  document.querySelectorAll('.fraction').forEach(function(b){b.addEventListener('click',function(){amount.value=b.dataset.v;update();});});
+  document.querySelector('.popular').addEventListener('click',function(e){var b=e.target.closest('[data-id]');if(b)choose(b.dataset.id);});
+  document.getElementById('libraryGrid').innerHTML=D.map(function(x){return '<div class="lib-item"><b>'+x.name+'</b><span>'+x.g+' g / cup · '+SOURCES[x.src].short+'</span></div>';}).join('');
+  choose('ap-flour');
+})();
+</script>
+</body>
+</html>
