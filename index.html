@@ -157,7 +157,7 @@
 
     <div class="notice">
       <span>Kitchen conversions are practical averages. Chop size, packing, brand and moisture can change a cup’s weight; for high-stakes baking, use the recipe author’s gram value when one is given.</span>
-      <a href="https://fdc.nal.usda.gov/food-search/?component=1100" target="_blank" rel="noopener noreferrer">US cup = 236.6 mL</a>
+      <a href="https://www.cdfa.ca.gov/dms/programs/general/2014DMS_FldRefMan/72014FRMCh1ArtA-DPart7.pdf" target="_blank" rel="noopener noreferrer">US cup = 236.6 mL</a>
     </div>
 
     <section class="library">
@@ -173,6 +173,7 @@
   var SOURCES={
     ka:{label:'King Arthur Baking',short:'KA',url:'https://www.kingarthurbaking.com/learn/ingredient-weight-chart'},
     usda:{label:'USDA FoodData Central',short:'USDA',url:'https://fdc.nal.usda.gov/food-search/?component=1100'},
+    usmeasure:{label:'NIST / US measurement tables',short:'NIST',url:'https://www.cdfa.ca.gov/dms/programs/general/2014DMS_FldRefMan/72014FRMCh1ArtA-DPart7.pdf'},
     az:{label:'USDA / AZ Health Zone',short:'USDA',url:'https://staging.azhealthzone.org/wp-content/uploads/2021/10/tomato_as.pdf'},
     calc:{label:'The Calculator Site',short:'TCS',url:'https://www.thecalculatorsite.com/cooking/cups-grams.php'},
     goodto:{label:'GoodTo UK conversions',short:'GT',url:'https://www.goodto.com/food/cups-to-grams-converter-87833'}
@@ -180,15 +181,15 @@
   var D=[];
   function add(id,name,cat,g,note,src,aliases,each,tbsp,tsp){D.push({id:id,name:name,cat:cat,g:g,note:note,src:src||'ka',aliases:aliases||'',each:each,tbsp:tbsp,tsp:tsp});}
 
-  add('water','Water','Liquids',227,'Still water; room-temperature kitchen measure.','ka','');
-  add('stock','Vegetable stock','Liquids',227,'Prepared stock; treated as water-density.','ka','broth bouillon');
-  add('milk','Whole milk','Dairy',227,'Fresh dairy milk.','ka','dairy milk');
-  add('buttermilk','Buttermilk','Dairy',227,'Cultured buttermilk.','ka');
-  add('heavy-cream','Heavy / double cream','Dairy',227,'Heavy cream; practical proxy for UK double cream.','ka','whipping cream double');
+  add('water','Water','Liquids',237,'US cup volume (236.6 mL), rounded to the nearest gram.','usmeasure','');
+  add('stock','Vegetable stock','Liquids',237,'Prepared stock; treated as water-density.','usmeasure','broth bouillon');
+  add('milk','Whole milk','Dairy',244,'Fresh whole dairy milk; USDA household measure.','usda','dairy milk');
+  add('buttermilk','Buttermilk','Dairy',244,'Cultured buttermilk; practical USDA household measure.','usda');
+  add('heavy-cream','Heavy / double cream','Dairy',238,'US heavy cream; practical proxy for UK double cream.','usda','whipping cream double');
   add('yogurt','Plain yoghurt','Dairy',227,'Unstrained plain yoghurt.','ka','yogurt natural');
-  add('sour-cream','Sour cream','Dairy',227,'Level cup.','ka');
+  add('sour-cream','Sour cream','Dairy',230,'Cultured sour cream; level USDA household measure.','usda');
   add('creme-fraiche','Crème fraîche','Dairy',226,'1/2 cup = 113 g.','ka');
-  add('cream-cheese','Cream cheese','Dairy',227,'Softened and levelled.','ka');
+  add('cream-cheese','Cream cheese','Dairy',232,'Plain cream cheese; softened and levelled.','usda');
   add('mascarpone','Mascarpone','Dairy',227,'Level cup.','ka');
   add('ricotta','Ricotta','Dairy',227,'Not heavily drained.','ka');
   add('cottage-cheese','Cottage cheese','Dairy',226,'1/2 cup = 113 g.','ka');
