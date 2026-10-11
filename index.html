@@ -92,6 +92,8 @@
     .lib-item{padding:13px 0;border-top:1px solid var(--line)}
     .lib-item b{font-size:13px;display:block}.lib-item span{font:400 11px DM Mono,monospace;color:var(--muted)}
     .version-stamp{margin-top:24px;text-align:right;font:400 10px/1.4 DM Mono,monospace;color:var(--muted)}
+.app-update{margin:10px 0 8px;text-align:center;font:400 11px/1.4 DM Mono,monospace}
+.app-update a{color:var(--muted);text-decoration:underline;text-underline-offset:3px}
     @media(max-width:780px){
       .page{padding-top:28px}.intro{display:block}.intro h1{max-width:600px}.intro p{margin-top:16px;max-width:540px}
       .workspace{grid-template-columns:1fr}.controls{border-right:0;border-bottom:1px solid var(--line)}.result{min-height:360px}.cup-art{width:160px;height:160px;right:-42px;top:18px}.library-grid{grid-template-columns:repeat(2,1fr)}
@@ -175,8 +177,16 @@
       </details>
     </section>
 
-    <footer class="version-stamp">v1.10 · build 2026-10-11 16:49 BST</footer>
+    <footer class="version-stamp">v1.11 · build 2026-10-11 16:51 BST</footer>
+    <div class="app-update"><a href="." id="updateAppLink">Update to latest version</a></div>
   </main>
+
+<script>
+document.getElementById('updateAppLink').addEventListener('click', function(e){
+  e.preventDefault();
+  window.location.href = window.location.pathname + '?v=' + Date.now();
+});
+</script>
 
 <script>
 (function(){
